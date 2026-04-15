@@ -1,0 +1,3613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PalpiteFlow — Apostas ao Vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --bg2: #0d1117;
+    --bg3: #131920;
+    --border: #1e2832;
+    --border2: #263040;
+    --text: #e8edf3;
+    --muted: #5a6a7a;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --green: #00e676;
+    --red: #ff1744;
+    --gold: #ffd600;
+    --card-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,0.6);
+    --glow-accent: 0 0 20px rgba(0,229,255,0.3);
+    --glow-green: 0 0 20px rgba(0,230,118,0.4);
+    --glow-red: 0 0 20px rgba(255,23,68,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      radial-gradient(ellipse 80% 40% at 20% 0%, rgba(0,229,255,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 80% 100%, rgba(124,58,237,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,11,16,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: var(--glow-accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .balance-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 8px;
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+  }
+
+  .balance-chip.win-flash {
+    background: rgba(0,230,118,0.15);
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: var(--glow-green);
+  }
+
+  .balance-chip.lose-flash {
+    background: rgba(255,23,68,0.1);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-accent:hover {
+    background: #33eaff;
+    box-shadow: var(--glow-accent);
+    transform: translateY(-1px);
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 16px; height: 1px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  /* ── VIDEO ── */
+  .video-section {
+    margin-bottom: 36px;
+  }
+
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 35%;
+    background: var(--bg2);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+  }
+
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .video-placeholder {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+  }
+
+  .live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,23,68,0.15);
+    border: 1px solid rgba(255,23,68,0.4);
+    color: var(--red);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+
+  /* ── MARKETS GRID ── */
+  .markets-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .markets-grid { grid-template-columns: 1fr; }
+    .video-wrapper { padding-top: 56.25%; }
+  }
+
+  /* ── MARKET CARD ── */
+  .market-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+
+  .market-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .market-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+
+  .market-card:hover::before { opacity: 1; }
+
+  .market-card.closed {
+    opacity: 0.6;
+  }
+
+  .market-card.resolved {
+    border-color: rgba(0,230,118,0.2);
+  }
+
+  .market-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .market-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .market-category {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── COUNTDOWN ── */
+  .countdown-bar-wrap {
+    margin-bottom: 16px;
+  }
+
+  .countdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .countdown-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    transition: color 0.3s;
+  }
+
+  .countdown-time.urgent { color: var(--red); }
+  .countdown-time.warning { color: var(--gold); }
+
+  .status-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .status-open {
+    background: rgba(0,230,118,0.1);
+    color: var(--green);
+    border: 1px solid rgba(0,230,118,0.3);
+  }
+
+  .status-locked {
+    background: rgba(255,214,0,0.1);
+    color: var(--gold);
+    border: 1px solid rgba(255,214,0,0.3);
+  }
+
+  .status-resolved {
+    background: rgba(0,229,255,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,229,255,0.3);
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 1s linear, background 0.5s;
+  }
+
+  .progress-fill.urgent {
+    background: linear-gradient(90deg, var(--red), #ff6090);
+  }
+
+  /* ── OPTIONS ── */
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: var(--accent);
+    opacity: 0.08;
+    width: var(--fill, 0%);
+    transition: width 0.6s ease;
+    pointer-events: none;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .option-btn.selected {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    box-shadow: inset 0 0 0 1px rgba(0,229,255,0.2);
+  }
+
+  .option-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .option-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    text-align: left;
+  }
+
+  .option-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+
+  .option-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .option-pool {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ── BET CONTROLS ── */
+  .bet-controls {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .amount-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .amount-btn {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 8px 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .amount-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .amount-btn.active {
+    background: rgba(0,229,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: inset 0 0 12px rgba(0,229,255,0.05);
+  }
+
+  .custom-amount-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    flex: 1.2;
+  }
+
+  .custom-amount-wrap:focus-within {
+    border-color: var(--accent);
+  }
+
+  .custom-amount-wrap.active {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.06);
+  }
+
+  .custom-amount-prefix {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    padding: 0 8px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .custom-amount-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    padding: 8px 8px 8px 0;
+    width: 0;
+    min-width: 0;
+  }
+
+  .custom-amount-input::placeholder {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  /* hide number arrows */
+  .custom-amount-input::-webkit-outer-spin-button,
+  .custom-amount-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .custom-amount-input[type=number] { -moz-appearance: textfield; }
+
+  .bet-submit {
+    width: 100%;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .bet-submit:hover:not(:disabled) {
+    background: #33eaff;
+    box-shadow: var(--glow-accent);
+    transform: translateY(-1px);
+  }
+
+  .bet-submit:disabled {
+    background: var(--bg3);
+    color: var(--muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .bet-submit.danger {
+    background: var(--red);
+    color: #fff;
+  }
+
+  /* ── MARKET FOOTER ── */
+  .market-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── LIVE FEED TICKER ── */
+  .live-feed {
+    margin: 24px 0 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .live-feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .live-feed-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .live-feed-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .live-feed-list {
+    max-height: 220px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feed-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    animation: feedSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .feed-item:last-child { border-bottom: none; }
+
+  @keyframes feedSlideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .feed-avatar {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .feed-avatar.bet  { background: rgba(0,229,255,0.12); color: var(--accent); }
+  .feed-avatar.win  { background: rgba(0,230,118,0.12); color: var(--green); }
+  .feed-avatar.join { background: rgba(124,58,237,0.12); color: #a78bfa; }
+
+  .feed-text { flex: 1; color: var(--text); line-height: 1.4; }
+  .feed-text strong { font-weight: 700; }
+  .feed-text .feed-market { color: var(--muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+  .feed-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .feed-amount.green { color: var(--green); }
+  .feed-amount.cyan  { color: var(--accent); }
+  .feed-amount.muted { color: var(--muted); }
+
+  .feed-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* ── WIN POPUP (big) ── */
+  .win-popup {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 8000;
+    background: rgba(0,230,118,0.1);
+    border: 1px solid rgba(0,230,118,0.4);
+    border-radius: 16px;
+    padding: 16px 20px;
+    min-width: 260px;
+    max-width: 320px;
+    animation: winPopIn 0.4s cubic-bezier(0.34,1.56,0.64,1), winPopOut 0.3s 4.7s ease forwards;
+    box-shadow: 0 0 40px rgba(0,230,118,0.15);
+  }
+
+  @keyframes winPopIn {
+    from { opacity: 0; transform: translateX(30px) scale(0.9); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes winPopOut {
+    to { opacity: 0; transform: translateX(20px) scale(0.95); }
+  }
+
+  .win-popup-name { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 2px; }
+  .win-popup-amount { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--green); }
+  .win-popup-detail { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── TOAST ── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), fadeOut 0.3s 2.7s ease forwards;
+    min-width: 260px;
+    max-width: 360px;
+  }
+
+  .toast.win {
+    border-color: rgba(0,230,118,0.4);
+    background: rgba(0,230,118,0.08);
+    color: var(--green);
+  }
+
+  .toast.lose {
+    border-color: rgba(255,23,68,0.3);
+    background: rgba(255,23,68,0.06);
+    color: var(--red);
+  }
+
+  .toast.info {
+    border-color: rgba(0,229,255,0.3);
+    color: var(--accent);
+  }
+
+  .toast-icon { font-size: 20px; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px) scale(0.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(10px) scale(0.95); }
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 420px;
+    margin: 24px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .modal-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .modal-input:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  /* ── ADMIN PANEL ── */
+  .admin-panel {
+    display: none;
+    margin-top: 40px;
+    background: var(--bg2);
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .admin-panel.open { display: block; }
+
+  .admin-panel h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) { .admin-grid { grid-template-columns: 1fr; } }
+
+  .admin-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .admin-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .admin-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .admin-resolve-btn {
+    width: 100%;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .admin-resolve-btn:hover {
+    border-color: var(--accent2);
+    background: rgba(124,58,237,0.1);
+    color: #a78bfa;
+  }
+
+  /* ── HISTORY ── */
+  .history-section {
+    margin-top: 40px;
+  }
+
+  .bet-history-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .bet-history-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bet-history-table td {
+    font-size: 13px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .bet-history-table tr:last-child td { border-bottom: none; }
+
+  .bet-history-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .hist-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .hist-won { background: rgba(0,230,118,0.1); color: var(--green); }
+  .hist-lost { background: rgba(255,23,68,0.1); color: var(--red); }
+  .hist-pending { background: rgba(255,214,0,0.1); color: var(--gold); }
+
+  /* ── RANKING ── */
+  .ranking-section {
+    margin-top: 40px;
+    margin-bottom: 60px;
+  }
+
+  .ranking-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ranking-item {
+    display: grid;
+    grid-template-columns: 40px 1fr auto auto;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .ranking-item:last-child { border-bottom: none; }
+  .ranking-item:hover { background: rgba(255,255,255,0.02); }
+
+  .rank-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .rank-1 { color: var(--gold); }
+  .rank-2 { color: #b0bec5; }
+  .rank-3 { color: #cd7f32; }
+
+  .rank-name {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .rank-gains {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+    margin-right: 24px;
+    transition: color 0.3s;
+  }
+
+  .rank-balance {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    transition: color 0.3s;
+  }
+
+  .rank-up   { color: var(--green) !important; }
+  .rank-down { color: var(--red) !important; }
+
+  /* ── RESULT OVERLAY ── */
+  .result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .result-overlay.open { display: flex; }
+
+  .result-card {
+    text-align: center;
+    animation: resultIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes resultIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .result-emoji { font-size: 80px; display: block; margin-bottom: 16px; }
+
+  .result-title {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 8px;
+  }
+
+  .result-win { color: var(--green); text-shadow: var(--glow-green); }
+  .result-lose { color: var(--red); }
+
+  .result-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #login-screen.hidden { display: none; }
+
+  .login-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 400px;
+    margin: 24px;
+    text-align: center;
+  }
+
+  .login-logo {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+
+  .login-anon-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .login-anon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,229,255,0.3);
+  }
+
+  .login-email-btn {
+    width: 100%;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .login-email-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .login-bonus {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .login-bonus span {
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  /* confetti particle */
+  .confetti-particle {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 9998;
+    animation: confettiFall var(--dur) ease-in forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+    100% { opacity: 0; transform: translate(var(--dx), 100vh) rotate(720deg); }
+  }
+
+  /* ── ADMIN NAV BUTTONS ── */
+  .admin-nav-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .admin-nav-btn:hover { color: var(--text); border-color: var(--muted); }
+  .admin-nav-btn.active {
+    background: rgba(124,58,237,0.15);
+    border-color: var(--accent2);
+    color: #a78bfa;
+  }
+
+  /* ── DEPOSIT MODAL ── */
+  .deposit-amounts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .deposit-amount-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .deposit-amount-btn:hover, .deposit-amount-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+  }
+
+  /* ── CATEGORY TABS ── */
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .cat-tab {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .cat-tab:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .cat-tab.active {
+    background: rgba(0,229,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,229,255,0.15);
+  }
+
+  .market-picker {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .market-picker-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+
+  .market-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .market-pick-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+
+  .market-pick-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.05);
+  }
+
+  .market-pick-btn.active-market {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    color: var(--accent);
+  }
+
+  .market-pick-timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⚡ PalpiteFlow</div>
+    <div class="login-sub" id="login-sub-text">Mercado de previsões ao vivo</div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="cat-tab active" id="tab-signin" onclick="switchAuthTab('signin')" style="flex:1;justify-content:center;">Entrar</button>
+      <button class="cat-tab" id="tab-signup" onclick="switchAuthTab('signup')" style="flex:1;justify-content:center;">Criar conta</button>
+    </div>
+
+    <!-- Sign In -->
+    <div id="form-signin">
+      <input class="modal-input" id="si-email" type="email" placeholder="Email" style="margin-bottom:10px;">
+      <input class="modal-input" id="si-password" type="password" placeholder="Senha" style="margin-bottom:14px;">
+      <button class="login-anon-btn" onclick="loginEmail()">Entrar</button>
+    </div>
+
+    <!-- Sign Up -->
+    <div id="form-signup" style="display:none;">
+      <input class="modal-input" id="su-name" type="text" placeholder="Seu nome" style="margin-bottom:10px;">
+      <input class="modal-input" id="su-email" type="email" placeholder="Email" style="margin-bottom:10px;">
+      <input class="modal-input" id="su-password" type="password" placeholder="Senha (mín. 6 caracteres)" style="margin-bottom:14px;">
+      <button class="login-anon-btn" onclick="registerEmail()">Criar conta grátis</button>
+    </div>
+
+    <div style="margin:16px 0;text-align:center;color:var(--muted);font-size:12px;">ou</div>
+    <button class="login-email-btn" onclick="loginAnon()">Entrar como visitante</button>
+
+    
+    <div id="auth-error" style="display:none;margin-top:12px;color:var(--red);font-size:13px;text-align:center;"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    PalpiteFlow
+  </div>
+  <div class="header-right">
+    <div class="balance-chip" id="balance-display">
+      💰 R$ 0,00
+    </div>
+    <button class="btn btn-ghost" onclick="openWithdraw()">Sacar</button>
+    <button class="btn btn-accent" onclick="openDeposit()">+ Depositar</button>
+    <button class="btn btn-ghost" id="admin-toggle" onclick="toggleAdmin()" style="display:none">⚙️ Admin</button>
+    <button class="btn btn-ghost" id="signout-btn" onclick="handleSignOut()" style="display:none;font-size:12px;padding:6px 10px;" title="Sair">⏻</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="container">
+  <!-- MARKETS FIRST -->
+  <div class="section-label" style="margin-bottom:16px;">Mercados Ao Vivo</div>
+
+  <!-- CATEGORY TABS -->
+  <div class="category-tabs" id="category-tabs">
+    <button class="cat-tab active" onclick="selectCategory('transito')">🚗 Trânsito</button>
+    <button class="cat-tab" onclick="selectCategory('pedestre')">🚶 Pedestre</button>
+    <button class="cat-tab" onclick="selectCategory('animais')">🐾 Animais</button>
+    <button class="cat-tab" onclick="selectCategory('futebol')">⚽ Futebol</button>
+    <button class="cat-tab" onclick="selectCategory('bitcoin')">₿ Bitcoin</button>
+  </div>
+
+  <!-- VIDEO SECTION — por categoria -->
+  <div class="video-section" style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="section-label" style="margin:0;">Transmissão ao Vivo</div>
+      <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="setVideoUrl()">🎥 Trocar Vídeo</button>
+    </div>
+    <div class="video-wrapper">
+      <div class="video-placeholder" id="video-placeholder">
+        <div class="live-badge"><div class="live-dot"></div> AO VIVO</div>
+        <div style="color:var(--muted);font-size:14px;margin-top:8px;" id="video-placeholder-text">Cole o link do stream desta categoria</div>
+        <button class="btn btn-ghost" style="margin-top:8px;" onclick="setVideoUrl()">🎥 Configurar Vídeo</button>
+      </div>
+      <iframe id="live-iframe" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture"></iframe>
+      <div id="video-blocker" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;cursor:none;"></div>
+      <div id="live-external" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg2);">
+        <div class="live-badge"><div class="live-dot"></div> AO VIVO</div>
+        <div style="font-size:22px;">📺</div>
+        <div style="font-size:13px;color:var(--muted);text-align:center;padding:0 24px;line-height:1.6;">
+          O canal não permite exibição incorporada.<br>
+          Abra o stream em uma nova aba enquanto aposta aqui.
+        </div>
+        <button class="btn btn-accent" style="padding:12px 28px;font-size:14px;" onclick="openExternalStream()">▶ Abrir Stream ao Vivo</button>
+        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="external-url-label"></div>
+        <button class="btn btn-ghost" style="font-size:12px;" onclick="setVideoUrl()">Trocar URL</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="markets-grid" id="markets-container"></div>
+
+  <!-- STATS -->
+  <div style="margin-top:20px;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+    <div class="live-dot" style="width:8px;height:8px;flex-shrink:0;"></div>
+    <span id="total-users-stat" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);">0</span>
+    <span style="font-size:13px;color:var(--muted);">usuários online agora</span>
+  </div>
+
+
+
+  <!-- ADMIN PANEL -->
+  <div class="admin-panel" id="admin-panel">
+    <!-- Admin Tab Nav -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <h3 style="margin:0;">⚙️ Painel Admin</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="admin-nav-btn active" id="anav-results" onclick="adminTab('results')">🎯 Resultados</button>
+        <button class="admin-nav-btn" id="anav-markets" onclick="adminTab('markets')">📋 Mercados</button>
+        <button class="admin-nav-btn" id="anav-categories" onclick="adminTab('categories')">🗂️ Categorias</button>
+        <button class="admin-nav-btn" id="anav-tools" onclick="adminTab('tools')">🔧 Ferramentas</button>
+      </div>
+    </div>
+
+    <!-- TAB: RESULTADOS -->
+    <div id="atab-results">
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">
+        Categoria ativa: <span id="admin-cat-label" style="color:var(--accent)"></span>
+      </div>
+      <div style="background:rgba(255,23,68,0.07);border:1px solid rgba(255,23,68,0.25);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="color:var(--red);font-weight:700;font-size:13px;margin-bottom:3px;">⚠️ Vídeo travou ou rodada inválida?</div>
+          <div style="color:var(--muted);font-size:12px;">Reembolsa todas as apostas pendentes da rodada atual. Os valores voltam para o saldo dos usuários.</div>
+        </div>
+        <button onclick="refundCurrentRound()" style="background:rgba(255,23,68,0.15);border:1px solid rgba(255,23,68,0.4);color:var(--red);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:10px 18px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,23,68,0.25)'" onmouseout="this.style.background='rgba(255,23,68,0.15)'">
+          🔄 Reembolsar Rodada
+        </button>
+      </div>
+      <div class="admin-grid" id="admin-grid"></div>
+    </div>
+
+    <!-- TAB: MERCADOS -->
+    <div id="atab-markets" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <label style="font-size:12px;color:var(--muted);margin-right:8px;">Categoria:</label>
+          <select id="admin-market-cat-select" class="modal-input" style="width:auto;display:inline-block;padding:6px 10px;font-size:13px;" onchange="renderAdminMarkets()">
+          </select>
+        </div>
+        <button class="btn btn-accent" style="font-size:13px;padding:8px 16px;" onclick="openNewMarketModal()">+ Novo Mercado</button>
+      </div>
+      <div id="admin-markets-list"></div>
+    </div>
+
+    <!-- TAB: CATEGORIAS -->
+    <div id="atab-categories" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span style="font-size:13px;color:var(--muted);">Gerencie as categorias exibidas para os usuários</span>
+        <button class="btn btn-accent" style="font-size:13px;padding:8px 16px;" onclick="openNewCategoryModal()">+ Nova Categoria</button>
+      </div>
+      <div id="admin-categories-list"></div>
+    </div>
+
+    <!-- TAB: FERRAMENTAS -->
+    <div id="atab-tools" style="display:none;">
+      <div class="admin-grid">
+        <div class="admin-card">
+          <div class="admin-card-title">💰 Saldo de Teste</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="admin-resolve-btn" onclick="addBalanceAmt(50)">+R$50</button>
+            <button class="admin-resolve-btn" onclick="addBalanceAmt(100)">+R$100</button>
+            <button class="admin-resolve-btn" onclick="addBalanceAmt(500)">+R$500</button>
+          </div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title">🔄 Reset</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="admin-resolve-btn" onclick="resetAllMarkets()">Resetar Mercados</button>
+            <button class="admin-resolve-btn" onclick="clearHistory()">Limpar Histórico</button>
+          </div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title">📊 Estatísticas</div>
+          <div id="admin-stats" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2;color:var(--muted);"></div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title">🏠 House Edge</div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+            <input type="number" id="house-edge-input" class="modal-input" style="width:80px;padding:6px 10px;font-size:13px;" value="5" min="0" max="30">
+            <span style="font-size:13px;color:var(--muted);">%</span>
+            <button class="admin-resolve-btn" onclick="saveHouseEdge()">Salvar</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Atual: <span id="current-house-edge" style="color:var(--accent)">5%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Novo/Editar Mercado -->
+  <div class="modal-overlay" id="market-modal">
+    <div class="modal" style="max-width:500px;">
+      <h2 id="market-modal-title">📋 Novo Mercado</h2>
+      <input type="hidden" id="market-modal-id">
+      <input type="hidden" id="market-modal-catkey">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Pergunta do mercado</label>
+        <input class="modal-input" id="market-modal-question" type="text" placeholder="Ex: Próximo veículo será...">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Duração (segundos)</label>
+        <input class="modal-input" id="market-modal-duration" type="number" placeholder="60" value="60" min="10">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:8px;">Opções de aposta</label>
+        <div id="market-modal-options"></div>
+        <button class="btn btn-ghost" style="margin-top:8px;font-size:12px;width:100%;" onclick="addOptionField()">+ Adicionar Opção</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('market-modal')">Cancelar</button>
+        <button class="btn btn-accent" style="flex:2;padding:12px;" onclick="saveMarket()">Salvar Mercado</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Nova/Editar Categoria -->
+  <div class="modal-overlay" id="category-modal">
+    <div class="modal" style="max-width:420px;">
+      <h2 id="cat-modal-title">🗂️ Nova Categoria</h2>
+      <input type="hidden" id="cat-modal-oldkey">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Nome da categoria</label>
+        <input class="modal-input" id="cat-modal-name" type="text" placeholder="Ex: Clima">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Emoji + Label (ex: 🌤️ Clima)</label>
+        <input class="modal-input" id="cat-modal-label" type="text" placeholder="🌤️ Clima">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('category-modal')">Cancelar</button>
+        <button class="btn btn-accent" style="flex:2;padding:12px;" onclick="saveCategory()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE ACTIVITY FEED -->
+  <div class="live-feed" id="live-feed" style="margin-top:32px;">
+    <div class="live-feed-header">
+      <div class="live-feed-title">
+        <div class="live-dot"></div> Atividade ao Vivo
+      </div>
+      <div class="live-feed-count" id="feed-online-count">0 online agora</div>
+    </div>
+    <div class="live-feed-list" id="live-feed-list"></div>
+  </div>
+
+  <!-- BET HISTORY -->
+  <div class="history-section">
+    <div class="section-label" style="margin-bottom:16px;">Histórico de Apostas</div>
+    <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
+      <table class="bet-history-table">
+        <thead>
+          <tr>
+            <th>Mercado</th>
+            <th>Opção</th>
+            <th>Valor</th>
+            <th>Retorno</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:24px;">Nenhuma aposta ainda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="ranking-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div class="section-label" style="margin:0;">🏆 Top 10 Ganhadores</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        <div class="live-dot" style="width:6px;height:6px;"></div> atualizado ao vivo
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:40px 1fr auto auto;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;">#</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;">USUÁRIO</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-right:24px;">GANHOS</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;">SALDO</div>
+      </div>
+      <div class="ranking-list" id="ranking-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="result-overlay" onclick="closeResult()">
+  <div class="result-card" id="result-card"></div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="modal-overlay" id="deposit-modal">
+  <div class="modal">
+    <h2>💳 Depositar</h2>
+    <p>Selecione o valor ou insira manualmente. (Simulado para MVP)</p>
+    <div class="deposit-amounts">
+      <button class="deposit-amount-btn" onclick="selectDeposit(20)">R$20</button>
+      <button class="deposit-amount-btn" onclick="selectDeposit(50)">R$50</button>
+      <button class="deposit-amount-btn" onclick="selectDeposit(100)">R$100</button>
+      <button class="deposit-amount-btn" onclick="selectDeposit(200)">R$200</button>
+      <button class="deposit-amount-btn" onclick="selectDeposit(500)">R$500</button>
+      <button class="deposit-amount-btn" id="custom-deposit-btn" onclick="selectDeposit(0)">Outro</button>
+    </div>
+    <input class="modal-input" id="deposit-amount-input" type="number" placeholder="Valor (R$)" style="display:none">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeDeposit()">Cancelar</button>
+      <button class="btn btn-accent" style="flex:2;padding:12px;" onclick="confirmDeposit()">Confirmar Depósito</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="modal-overlay" id="video-modal">
+  <div class="modal">
+    <h2>🎥 Configurar Vídeo — <span id="video-modal-cat-label" style="color:var(--accent)"></span></h2>
+    <p style="margin-bottom:10px;">Vídeo principal. Se der erro, após <b style="color:var(--accent)">2 minutos</b> troca automaticamente para o backup.</p>
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">▶ Vídeo Principal</label>
+    <input class="modal-input" id="video-url-input" type="text" placeholder="youtube.com/watch?v=...  ou  twitch.tv/canal" style="margin-bottom:12px;">
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">🔁 Vídeo Backup (fallback automático)</label>
+    <input class="modal-input" id="video-url-input2" type="text" placeholder="youtube.com/watch?v=...  ou  twitch.tv/canal">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('video-modal')">Cancelar</button>
+      <button class="btn btn-accent" style="flex:2;padding:12px;" onclick="confirmVideoUrl()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  SUPABASE CLIENT
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://aqdyzapyrgzpdeenmksd.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZHl6YXB5cmd6cGRlZW5ta3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDEwOTAsImV4cCI6MjA5MTQxNzA5MH0.VKJviBKgVdmf4tL_1W-gQSWVyJSrWa1cnwmn-CSE6t0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+const STATE = {
+  user: null,      // { id, name, email, is_admin }
+  balance: 0,
+  bets: [],
+  selectedAmounts: {},
+  selectedOptions: {},
+  supabaseSession: null,
+};
+
+let HOUSE_EDGE_VAL = parseFloat(localStorage.getItem('pf_house_edge')) || 0.05;
+const HOUSE_EDGE = HOUSE_EDGE_VAL; // legacy alias
+
+// ─────────────────────────────────────────────
+//  MARKETS DEFINITION
+// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  CATEGORIAS E MERCADOS
+// ─────────────────────────────────────────────
+const CATEGORIES = {
+  transito: {
+    label: '🚗 Trânsito',
+    videoUrl: 'https://www.youtube.com/embed/1EiC9bvVGnk?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1',
+    markets: [
+      { id: 'tr1', title: 'Próximo veículo será:', duration: 60, options: ['Carro', 'Moto', 'Caminhão', 'Bicicleta'] },
+      { id: 'tr2', title: 'Quantos carros passam em 2 minutos?', duration: 120, options: ['0–5', '6–10', '11–20', '20+'] },
+      { id: 'tr3', title: 'Próximo veículo que passar é vermelho?', duration: 90, options: ['Sim', 'Não'] },
+      { id: 'tr4', title: 'Qual direção do próximo veículo?', duration: 60, options: ['Esquerda', 'Direita'] },
+      { id: 'tr5', title: 'Haverá buzina nos próximos 2 min?', duration: 120, options: ['Sim', 'Não'] },
+      { id: 'tr6', title: 'Próximo veículo é de passeio ou carga?', duration: 75, options: ['Passeio', 'Carga'] },
+    ]
+  },
+  pedestre: {
+    label: '🚶 Pedestre',
+    videoUrl: '',
+    markets: [
+      { id: 'pe1', title: 'Próxima pessoa a passar é:', duration: 60, options: ['Homem', 'Mulher'] },
+      { id: 'pe2', title: 'Quantas pessoas passam em 2 minutos?', duration: 120, options: ['0–2', '3–5', '6–10', '10+'] },
+      { id: 'pe3', title: 'Próxima pessoa usa chapéu ou boné?', duration: 90, options: ['Sim', 'Não'] },
+      { id: 'pe4', title: 'Próxima pessoa está usando celular?', duration: 75, options: ['Sim', 'Não'] },
+      { id: 'pe5', title: 'Próxima pessoa passa sozinha ou acompanhada?', duration: 90, options: ['Sozinha', 'Acompanhada'] },
+      { id: 'pe6', title: 'Próxima pessoa está correndo?', duration: 60, options: ['Sim, correndo', 'Não, andando'] },
+    ]
+  },
+  animais: {
+    label: '🐾 Animais',
+    videoUrl: '',
+    markets: [
+      { id: 'an1', title: 'Próximo animal que aparecer:', duration: 120, options: ['Cachorro', 'Gato', 'Pássaro', 'Outro'] },
+      { id: 'an2', title: 'Aparecerá algum animal nos próximos 3 min?', duration: 180, options: ['Sim', 'Não'] },
+      { id: 'an3', title: 'Próximo pássaro voa para qual lado?', duration: 90, options: ['Esquerda', 'Direita', 'Reto'] },
+      { id: 'an4', title: 'O cachorro próximo está com coleira?', duration: 90, options: ['Sim', 'Não'] },
+      { id: 'an5', title: 'Quantos animais aparecem em 3 minutos?', duration: 180, options: ['0', '1', '2', '3+'] },
+      { id: 'an6', title: 'Próximo animal está sozinho ou com dono?', duration: 120, options: ['Sozinho', 'Com dono'] },
+    ]
+  },
+  futebol: {
+    label: '⚽ Futebol',
+    videoUrl: '',
+    markets: [
+      { id: 'ft1', title: 'Vai sair gol nos próximos 5 minutos?', duration: 300, options: ['Sim', 'Não'] },
+      { id: 'ft2', title: 'Próxima falta é para qual time?', duration: 120, options: ['Time A', 'Time B'] },
+      { id: 'ft3', title: 'Haverá escanteio nos próximos 3 min?', duration: 180, options: ['Sim', 'Não'] },
+      { id: 'ft4', title: 'Próxima posse de bola:', duration: 90, options: ['Time A', 'Time B'] },
+      { id: 'ft5', title: 'Cartão amarelo nos próximos 5 min?', duration: 300, options: ['Sim', 'Não'] },
+      { id: 'ft6', title: 'Próximo chute vai no gol?', duration: 120, options: ['Sim, gol!', 'Não, defesa/fora'] },
+    ]
+  },
+  bitcoin: {
+    label: '₿ Bitcoin',
+    videoUrl: 'https://www.youtube.com/embed/videoseries?list=PLq_bUm4bHyRiGCX0qxkOQUkE0vOiN6Yo2&autoplay=1&mute=1',
+    markets: [
+      { id: 'bt1', title: 'Bitcoin sobe nos próximos 3 minutos?', duration: 180, options: ['Sobe 📈', 'Cai 📉'] },
+      { id: 'bt2', title: 'Variação do BTC em 5 min será:', duration: 300, options: ['+0.1% ou mais', 'Entre -0.1% e +0.1%', '-0.1% ou menos'] },
+      { id: 'bt3', title: 'Preço do BTC nos próximos 2 min:', duration: 120, options: ['Sobe', 'Cai', 'Lateral'] },
+      { id: 'bt4', title: 'Ethereum acompanha o BTC agora?', duration: 180, options: ['Sim, mesmo sentido', 'Não, sentido oposto'] },
+      { id: 'bt5', title: 'Volume de negociação nos próx 3 min:', duration: 180, options: ['Aumenta', 'Diminui'] },
+      { id: 'bt6', title: 'BTC rompe resistência nos próx 5 min?', duration: 300, options: ['Sim, rompe', 'Não, resiste'] },
+    ]
+  },
+};
+
+// Flatten all markets for runtime
+const MARKETS_DEF = Object.entries(CATEGORIES).flatMap(([catKey, cat]) =>
+  cat.markets.map(m => ({ ...m, catKey, category: cat.label }))
+);
+
+let activeCategory = 'transito';
+
+// Market runtime state
+const markets = {};
+MARKETS_DEF.forEach(def => {
+  markets[def.id] = {
+    ...def,
+    pools: def.options.reduce((a, o) => ({ ...a, [o]: 0 }), {}),
+    betters: def.options.reduce((a, o) => ({ ...a, [o]: 0 }), {}),
+    status: 'open',
+    timeLeft: def.duration,
+    winner: null,
+  };
+});
+
+// Fake other players (for social proof)
+function seedFakeBets() {
+  // Seed pools
+  MARKETS_DEF.forEach(def => {
+    def.options.forEach((opt, i) => {
+      const amount = [15, 25, 10, 20, 30][i % 5];
+      markets[def.id].pools[opt] += amount;
+      markets[def.id].betters[opt] += 1;
+    });
+  });
+
+  // Rich fake leaderboard — 15 players with balances + gains
+  STATE._fakeUsers = [
+    { name: 'Rodrigo E.',  balance: 48200.50, gains: 23400.00 },
+    { name: 'Camila F.',   balance: 36400.00, gains: 18900.50 },
+    { name: 'Leonardo C.', balance: 29100.75, gains: 14200.30 },
+    { name: 'Beatriz J.',  balance: 24500.20, gains: 11800.00 },
+    { name: 'Gustavo I.',  balance: 19800.00, gains:  8900.75 },
+    { name: 'Natalia U.',  balance: 17600.30, gains:  7400.20 },
+    { name: 'Vinicius R.', balance: 15400.90, gains:  6200.50 },
+    { name: 'Sophia M.',   balance: 13200.10, gains:  5100.00 },
+    { name: 'Anderson Y.', balance: 11800.00, gains:  4300.90 },
+    { name: 'Larissa X.',  balance:  9800.50, gains:  3600.00 },
+    { name: 'Felipe Q.',   balance:  8700.00, gains:  2900.50 },
+    { name: 'Mariana T.',  balance:  7600.25, gains:  2200.00 },
+    { name: 'Diego L.',    balance:  6400.80, gains:  1700.30 },
+    { name: 'Amanda W.',   balance:  5300.00, gains:  1200.00 },
+    { name: 'Carlos R.',   balance:  4100.60, gains:   800.50 },
+  ];
+}
+
+// ─────────────────────────────────────────────
+//  PERSISTÊNCIA (Supabase + localStorage fallback)
+// ─────────────────────────────────────────────
+function saveAdminState() {
+  try {
+    const catData = {};
+    Object.keys(CATEGORIES).forEach(k => {
+      catData[k] = {
+        videoUrl: CATEGORIES[k].videoUrl || '',
+        videoUrl2: CATEGORIES[k].videoUrl2 || ''
+      };
+    });
+    localStorage.setItem('pf_admin_cats', JSON.stringify(catData));
+  } catch(e) {}
+}
+
+function loadAdminState() {
+  try {
+    const saved = localStorage.getItem('pf_admin_cats');
+    if (!saved) return;
+    const catData = JSON.parse(saved);
+    Object.keys(catData).forEach(k => {
+      if (CATEGORIES[k]) {
+        CATEGORIES[k].videoUrl = catData[k].videoUrl || '';
+        CATEGORIES[k].videoUrl2 = catData[k].videoUrl2 || '';
+      }
+    });
+  } catch(e) {}
+}
+
+function saveState() {
+  // Apenas dados locais não críticos
+  localStorage.setItem('pf_bets_cache', JSON.stringify(STATE.bets.slice(0, 20)));
+}
+
+function loadState() {
+  const bets = localStorage.getItem('pf_bets_cache');
+  if (bets) { try { STATE.bets = JSON.parse(bets); } catch(e) {} }
+}
+
+async function syncBalanceFromDB() {
+  if (!STATE.supabaseSession) return;
+  const { data } = await sb.from('profiles').select('balance, name, is_admin, total_gains')
+    .eq('id', STATE.supabaseSession.user.id).single();
+  if (data) {
+    STATE.balance = parseFloat(data.balance) || 0;
+    STATE.user.name = data.name || STATE.user.name;
+    STATE.user.is_admin = data.is_admin;
+    updateBalanceDisplay();
+    if (data.is_admin) document.getElementById('admin-toggle').style.display = 'inline-flex';
+  }
+}
+
+async function syncBetsFromDB() {
+  if (!STATE.supabaseSession) return;
+  const { data } = await sb.from('bets').select('*')
+    .eq('user_id', STATE.supabaseSession.user.id)
+    .order('created_at', { ascending: false }).limit(50);
+  if (data) {
+    STATE.bets = data.map(b => ({
+      id: b.id, marketId: b.market_id, marketTitle: b.market_title,
+      option: b.option, amount: parseFloat(b.amount),
+      payout: parseFloat(b.actual_payout || b.potential_payout || 0),
+      status: b.status, timestamp: b.created_at
+    }));
+    renderHistory();
+  }
+}
+
+// Escuta mudanças de saldo em tempo real
+function subscribeBalance() {
+  if (!STATE.supabaseSession) return;
+  sb.channel('profile-balance')
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'profiles',
+      filter: 'id=eq.' + STATE.supabaseSession.user.id
+    }, payload => {
+      STATE.balance = parseFloat(payload.new.balance) || 0;
+      updateBalanceDisplay('win-flash');
+    })
+    .subscribe();
+}
+
+// Canal de avisos do admin para todos os usuários
+let _adminBroadcastChannel = null;
+function subscribeAdminBroadcast() {
+  _adminBroadcastChannel = sb.channel('admin-broadcast', {
+    config: { broadcast: { self: false } }
+  });
+  _adminBroadcastChannel
+    .on('broadcast', { event: 'refund' }, ({ payload }) => {
+      showRefundBanner(payload.message, payload.amount);
+    })
+    .subscribe();
+}
+
+function broadcastRefund(message, amount) {
+  if (!_adminBroadcastChannel) return;
+  _adminBroadcastChannel.send({
+    type: 'broadcast',
+    event: 'refund',
+    payload: { message, amount }
+  });
+}
+
+function showRefundBanner(message, amount) {
+  const existing = document.getElementById('refund-banner');
+  if (existing) existing.remove();
+
+  if (!document.getElementById('refund-anim-style')) {
+    const style = document.createElement('style');
+    style.id = 'refund-anim-style';
+    style.textContent = '@keyframes refundSlideIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }';
+    document.head.appendChild(style);
+  }
+
+  const banner = document.createElement('div');
+  banner.id = 'refund-banner';
+  banner.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#1a0a00,#2a1200);border:1px solid rgba(255,165,0,0.5);border-radius:16px;padding:20px 28px;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.7);animation:refundSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;text-align:center;';
+
+  const icon = document.createElement('div');
+  icon.style.cssText = 'font-size:32px;margin-bottom:10px;';
+  icon.textContent = '⚠️';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'color:#ffa500;font-family:Syne,sans-serif;font-weight:800;font-size:17px;margin-bottom:8px;';
+  title.textContent = 'Rodada Cancelada';
+
+  const msg = document.createElement('div');
+  msg.style.cssText = 'color:rgba(255,255,255,0.85);font-size:14px;line-height:1.6;margin-bottom:14px;';
+  msg.textContent = message;
+
+  const amtBox = document.createElement('div');
+  amtBox.style.cssText = 'background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);border-radius:10px;padding:10px 16px;color:#00e676;font-family:JetBrains Mono,monospace;font-weight:700;font-size:15px;';
+  amtBox.textContent = '✅ R$ ' + parseFloat(amount).toFixed(2) + ' devolvido ao seu saldo';
+
+  const btn = document.createElement('button');
+  btn.style.cssText = 'margin-top:14px;background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:12px;padding:6px 16px;border-radius:6px;cursor:pointer;';
+  btn.textContent = 'Fechar';
+  btn.onclick = function() { banner.remove(); };
+
+  banner.appendChild(icon);
+  banner.appendChild(title);
+  banner.appendChild(msg);
+  banner.appendChild(amtBox);
+  banner.appendChild(btn);
+  document.body.appendChild(banner);
+
+  setTimeout(function() { if (banner.parentNode) banner.remove(); }, 12000);
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('form-signin').style.display = tab === 'signin' ? '' : 'none';
+  document.getElementById('form-signup').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+}
+
+function setAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function setAuthLoading(loading) {
+  document.querySelectorAll('.login-anon-btn, .login-email-btn').forEach(b => {
+    b.disabled = loading;
+    if (loading) b.style.opacity = '0.6';
+    else b.style.opacity = '';
+  });
+}
+
+async function loginEmail() {
+  const email = document.getElementById('si-email').value.trim();
+  const password = document.getElementById('si-password').value;
+  if (!email || !password) { setAuthError('Preencha email e senha.'); return; }
+  setAuthLoading(true); setAuthError('');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  setAuthLoading(false);
+  if (error) { setAuthError(error.message === 'Invalid login credentials' ? 'Email ou senha incorretos.' : error.message); return; }
+  await handleAuthSession(data.session);
+}
+
+async function registerEmail() {
+  const name = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const password = document.getElementById('su-password').value;
+  if (!name || !email || !password) { setAuthError('Preencha todos os campos.'); return; }
+  if (password.length < 6) { setAuthError('Senha deve ter pelo menos 6 caracteres.'); return; }
+  setAuthLoading(true); setAuthError('');
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+  setAuthLoading(false);
+  if (error) { setAuthError(error.message); return; }
+  if (data.session) {
+    await handleAuthSession(data.session);
+  } else {
+    setAuthError('');
+    document.getElementById('login-sub-text').textContent = '✅ Conta criada! Verifique seu email para confirmar.';
+  }
+}
+
+async function loginAnon() {
+  setAuthLoading(true);
+  const { data, error } = await sb.auth.signInAnonymously();
+  setAuthLoading(false);
+  if (error) {
+    // Fallback local se anon não habilitado no Supabase
+    const id = 'anon_' + Math.random().toString(36).slice(2, 9);
+    STATE.user = { id, name: 'Visitante' + Math.floor(Math.random() * 9000 + 1000), type: 'anon' };
+    STATE.balance = 100;
+    startApp();
+    return;
+  }
+  await handleAuthSession(data.session);
+}
+
+async function handleAuthSession(session) {
+  STATE.supabaseSession = session;
+  const userId = session.user.id;
+  // Busca perfil
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', userId).single();
+  STATE.user = {
+    id: userId,
+    name: profile?.name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
+    email: session.user.email,
+    is_admin: profile?.is_admin || false,
+    type: 'supabase'
+  };
+  STATE.balance = parseFloat(profile?.balance || 100);
+  startApp();
+  // Sync em background
+  setTimeout(syncBetsFromDB, 500);
+  subscribeBalance();
+  subscribeAdminBroadcast();
+}
+
+async function handleSignOut() {
+  await sb.auth.signOut();
+  STATE.user = null;
+  STATE.supabaseSession = null;
+  STATE.balance = 0;
+  STATE.bets = [];
+  location.reload();
+}
+
+function startApp() {
+  try {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('admin-toggle').style.display = 'inline-flex';
+    document.getElementById('signout-btn').style.display = 'inline-flex';
+    document.getElementById('balance-display').style.display = 'flex';
+    document.getElementById('withdraw-btn').style.display = 'inline-flex';
+    document.getElementById('deposit-btn').style.display = 'inline-flex';
+    document.getElementById('guest-login-btn').style.display = 'none';
+    updateBalanceDisplay();
+    loadAdminState();
+    // Recarrega vídeo da categoria ativa com URLs salvas pelo admin
+    loadCategoryVideo(activeCategory);
+    renderAdmin();
+    renderHistory();
+    renderRanking();
+    showToast('Bem-vindo(a), ' + STATE.user.name + '!', 'info');
+  } catch(e) {
+    console.error('startApp error:', e);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  BALANCE
+// ─────────────────────────────────────────────
+function updateBalanceDisplay(flash) {
+  const el = document.getElementById('balance-display');
+  el.textContent = '💰 R$ ' + STATE.balance.toFixed(2).replace('.', ',');
+  if (flash) {
+    el.classList.add(flash);
+    setTimeout(() => el.classList.remove(flash), 1200);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  TIMERS
+// ─────────────────────────────────────────────
+function startTimers() {
+  setInterval(() => {
+    Object.values(markets).forEach(m => {
+      if (m.status === 'open') {
+        m.timeLeft--;
+        if (m.timeLeft <= 0) {
+          m.status = 'locked';
+          m.timeLeft = 0;
+        }
+      }
+      updateMarketTimer(m);
+    });
+    updateStats();
+  }, 1000);
+}
+
+function updateMarketTimer(m) {
+  const el = document.getElementById('timer-' + m.id);
+  const bar = document.getElementById('bar-' + m.id);
+  const badge = document.getElementById('badge-' + m.id);
+  if (!el) return;
+
+  const pct = (m.timeLeft / m.duration) * 100;
+  const mins = Math.floor(m.timeLeft / 60);
+  const secs = m.timeLeft % 60;
+
+  if (m.status === 'open') {
+    el.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+    el.className = 'countdown-time' + (m.timeLeft <= 30 ? ' urgent' : m.timeLeft <= 60 ? ' warning' : '');
+    bar.style.width = pct + '%';
+    bar.className = 'progress-fill' + (m.timeLeft <= 30 ? ' urgent' : '');
+    badge.textContent = 'ABERTO';
+    badge.className = 'status-badge status-open';
+  } else if (m.status === 'locked') {
+    el.textContent = '0:00';
+    el.className = 'countdown-time urgent';
+    bar.style.width = '0%';
+    badge.textContent = 'FECHADO';
+    badge.className = 'status-badge status-locked';
+  } else if (m.status === 'resolved') {
+    el.textContent = '✓';
+    badge.textContent = 'RESOLVIDO';
+    badge.className = 'status-badge status-resolved';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RENDER MARKETS
+// ─────────────────────────────────────────────
+function selectCategory(catKey) {
+  activeCategory = catKey;
+  document.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.trim() === (CATEGORIES[catKey] && CATEGORIES[catKey].label));
+  });
+  renderMarkets();
+  loadCategoryVideo(catKey);
+}
+
+function renderMarkets() {
+  const container = document.getElementById('markets-container');
+  container.innerHTML = '';
+
+  const catDefs = MARKETS_DEF.filter(d => d.catKey === activeCategory);
+
+  // Left col: market picker list
+  const picker = document.createElement('div');
+  picker.className = 'market-picker';
+  picker.style.gridColumn = '1 / -1';
+
+  const cat = CATEGORIES[activeCategory];
+  picker.innerHTML = '<div class="market-picker-title">Escolha o mercado — ' + cat.label + '</div>' +
+    '<div class="market-options-list" id="market-picker-list"></div>';
+  container.appendChild(picker);
+
+  const list = picker.querySelector('#market-picker-list');
+  catDefs.forEach((def, idx) => {
+    const m = markets[def.id];
+    const mins = Math.floor(m.duration / 60);
+    const btn = document.createElement('button');
+    btn.className = 'market-pick-btn' + (idx === 0 ? ' active-market' : '');
+    btn.id = 'pickbtn-' + def.id;
+    btn.innerHTML = '<span>' + def.title + '</span><span class="market-pick-timer">' + mins + 'min</span>';
+    btn.onclick = () => {
+      document.querySelectorAll('.market-pick-btn').forEach(b => b.classList.remove('active-market'));
+      btn.classList.add('active-market');
+      // Show only this market card
+      catDefs.forEach(d => {
+        const card = document.getElementById('card-' + d.id);
+        if (card) card.style.display = d.id === def.id ? '' : 'none';
+      });
+    };
+    list.appendChild(btn);
+  });
+
+  // Render all market cards (only first visible)
+  catDefs.forEach((def, idx) => {
+    renderMarketCard(def);
+    const card = document.getElementById('card-' + def.id);
+    if (card && idx !== 0) card.style.display = 'none';
+  });
+}
+
+function renderMarketCard(def) {
+  const m = markets[def.id];
+  const container = document.getElementById('markets-container');
+  const totalPool = Object.values(m.pools).reduce((a, b) => a + b, 0);
+  const totalBetters = Object.values(m.betters).reduce((a, b) => a + b, 0);
+
+  const card = document.createElement('div');
+  card.className = 'market-card';
+  card.id = 'card-' + m.id;
+
+  const optionsHtml = def.options.map((opt, i) => {
+    const pool = m.pools[opt] || 0;
+    const pct = totalPool > 0 ? Math.round((pool / totalPool) * 100) : Math.round(100 / def.options.length);
+    return `
+      <button class="option-btn" id="opt-${m.id}-${i}"
+        style="--fill: ${pct}%"
+        onclick="selectOption('${m.id}', '${opt}', this)">
+        <span class="option-label">${opt}</span>
+        <div class="option-stats">
+          <span class="option-pct">${pct}%</span>
+          <span class="option-pool">R$${pool.toFixed(0)}</span>
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  const amountsHtml = [5, 10, 20].map(v =>
+    `<button class="amount-btn" id="amt-${m.id}-${v}" onclick="selectAmount('${m.id}', ${v})">R$${v}</button>`
+  ).join('') + `
+    <div class="custom-amount-wrap" id="custom-wrap-${m.id}">
+      <span class="custom-amount-prefix">R$</span>
+      <input
+        type="number"
+        class="custom-amount-input"
+        id="custom-amt-${m.id}"
+        placeholder="outro"
+        min="1"
+        oninput="selectCustomAmount('${m.id}', this.value)"
+        onfocus="onCustomAmountFocus('${m.id}')"
+      >
+    </div>
+  `;
+
+  card.innerHTML = `
+    <div class="market-header">
+      <div class="market-title">${def.title}</div>
+      <div class="market-category">${def.category}</div>
+    </div>
+
+    <div class="countdown-bar-wrap">
+      <div class="countdown-row">
+        <span class="countdown-time" id="timer-${m.id}">
+          ${Math.floor(m.duration/60)}:${String(m.duration%60).padStart(2,'0')}
+        </span>
+        <span class="status-badge status-open" id="badge-${m.id}">ABERTO</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="bar-${m.id}" style="width:100%"></div>
+      </div>
+    </div>
+
+    <div class="options-grid">${optionsHtml}</div>
+
+    <div class="bet-controls">
+      <div class="amount-row">${amountsHtml}</div>
+      <button class="bet-submit" id="submit-${m.id}" onclick="placeBet('${m.id}')" disabled>
+        Selecione uma opção
+      </button>
+    </div>
+
+    <div class="market-footer">
+      <span id="betters-${m.id}">👥 ${totalBetters} apostando</span>
+      <span id="pool-${m.id}">R$ ${totalPool.toFixed(2)} no pool</span>
+    </div>
+  `;
+
+  container.appendChild(card);
+}
+
+function updateMarketCard(mId) {
+  const m = markets[mId];
+  const def = MARKETS_DEF.find(d => d.id === mId);
+  const totalPool = Object.values(m.pools).reduce((a, b) => a + b, 0);
+  const totalBetters = Object.values(m.betters).reduce((a, b) => a + b, 0);
+
+  def.options.forEach((opt, i) => {
+    const pool = m.pools[opt] || 0;
+    const pct = totalPool > 0 ? Math.round((pool / totalPool) * 100) : Math.round(100 / def.options.length);
+    const el = document.getElementById(`opt-${mId}-${i}`);
+    if (el) {
+      el.style.setProperty('--fill', pct + '%');
+      const stats = el.querySelector('.option-stats');
+      if (stats) stats.innerHTML = `<span class="option-pct">${pct}%</span><span class="option-pool">R$${pool.toFixed(0)}</span>`;
+    }
+  });
+
+  const bettersEl = document.getElementById('betters-' + mId);
+  const poolEl = document.getElementById('pool-' + mId);
+  if (bettersEl) bettersEl.textContent = `👥 ${totalBetters} apostando`;
+  if (poolEl) poolEl.textContent = `R$ ${totalPool.toFixed(2)} no pool`;
+}
+
+// ─────────────────────────────────────────────
+//  BETTING
+// ─────────────────────────────────────────────
+function selectOption(mId, option, btnEl) {
+  STATE.selectedOptions[mId] = option;
+  const def = MARKETS_DEF.find(d => d.id === mId);
+  def.options.forEach((opt, i) => {
+    const el = document.getElementById(`opt-${mId}-${i}`);
+    if (el) el.classList.toggle('selected', opt === option);
+  });
+  updateSubmitBtn(mId);
+}
+
+function selectAmount(mId, amount) {
+  STATE.selectedAmounts[mId] = amount;
+  [5, 10, 20].forEach(v => {
+    const el = document.getElementById(`amt-${mId}-${v}`);
+    if (el) el.classList.toggle('active', v === amount);
+  });
+  // Clear custom input
+  const customInput = document.getElementById(`custom-amt-${mId}`);
+  const customWrap = document.getElementById(`custom-wrap-${mId}`);
+  if (customInput) customInput.value = '';
+  if (customWrap) customWrap.classList.remove('active');
+  updateSubmitBtn(mId);
+}
+
+function onCustomAmountFocus(mId) {
+  // Deactivate preset buttons
+  [5, 10, 20].forEach(v => {
+    const el = document.getElementById(`amt-${mId}-${v}`);
+    if (el) el.classList.remove('active');
+  });
+  const customWrap = document.getElementById(`custom-wrap-${mId}`);
+  if (customWrap) customWrap.classList.add('active');
+}
+
+function selectCustomAmount(mId, val) {
+  const amount = parseFloat(val);
+  if (!val || isNaN(amount) || amount <= 0) {
+    STATE.selectedAmounts[mId] = null;
+  } else {
+    STATE.selectedAmounts[mId] = amount;
+  }
+  // Deactivate preset buttons
+  [5, 10, 20].forEach(v => {
+    const el = document.getElementById(`amt-${mId}-${v}`);
+    if (el) el.classList.remove('active');
+  });
+  const customWrap = document.getElementById(`custom-wrap-${mId}`);
+  if (customWrap) customWrap.classList.toggle('active', !!STATE.selectedAmounts[mId]);
+  updateSubmitBtn(mId);
+}
+
+function updateSubmitBtn(mId) {
+  const btn = document.getElementById('submit-' + mId);
+  const m = markets[mId];
+  if (!btn) return;
+
+  const option = STATE.selectedOptions[mId];
+  const amount = STATE.selectedAmounts[mId];
+
+  if (m.status !== 'open') {
+    btn.disabled = true;
+    btn.textContent = m.status === 'locked' ? '⏳ Mercado Fechado' : '✓ Resolvido';
+    return;
+  }
+
+  if (!option) { btn.disabled = true; btn.textContent = 'Selecione uma opção'; return; }
+  if (!amount) { btn.disabled = true; btn.textContent = 'Selecione o valor'; return; }
+  if (STATE.balance < amount) {
+    btn.disabled = true;
+    btn.textContent = '❌ Saldo insuficiente';
+    btn.classList.add('danger');
+    return;
+  }
+
+  btn.classList.remove('danger');
+  const def = MARKETS_DEF.find(d => d.id === mId);
+  const totalPool = Object.values(m.pools).reduce((a, b) => a + b, 0) + amount;
+  const optPool = (m.pools[option] || 0) + amount;
+  const odds = ((totalPool * (1 - HOUSE_EDGE_VAL)) / optPool).toFixed(2);
+  const payout = (amount * odds).toFixed(2);
+
+  btn.disabled = false;
+  btn.textContent = `Apostar R$${amount} → Ganhar R$${payout}`;
+}
+
+async function placeBet(mId) {
+  const m = markets[mId];
+  const option = STATE.selectedOptions[mId];
+  const amount = STATE.selectedAmounts[mId];
+
+  if (!option || !amount) return;
+  if (m.status !== 'open') { showToast('Mercado fechado!', 'info'); return; }
+  if (STATE.balance < amount) { showToast('Saldo insuficiente!', 'info'); return; }
+
+  // Calcula odds localmente (feedback imediato)
+  m.pools[option] = (m.pools[option] || 0) + amount;
+  m.betters[option] = (m.betters[option] || 0) + 1;
+  const totalPool = Object.values(m.pools).reduce((a, b) => a + b, 0);
+  const odds = ((totalPool * (1 - HOUSE_EDGE_VAL)) / m.pools[option]);
+  const payout = parseFloat((amount * odds).toFixed(2));
+  const def = MARKETS_DEF.find(d => d.id === mId);
+
+  // Desconta localmente para feedback imediato
+  STATE.balance -= amount;
+  updateBalanceDisplay('lose-flash');
+
+  const bet = {
+    id: Date.now(), marketId: mId, marketTitle: def.title,
+    option, amount, odds: parseFloat(odds.toFixed(3)),
+    payout, status: 'pending', timestamp: new Date().toISOString(),
+  };
+  STATE.bets.push(bet);
+  saveState();
+
+  // Salva no Supabase se logado
+  if (STATE.supabaseSession) {
+    const btn = document.getElementById('submit-' + mId);
+    if (btn) { btn.disabled = true; btn.textContent = 'Registrando...'; }
+
+    const { data, error } = await sb.rpc('place_bet', {
+      p_user_id: STATE.supabaseSession.user.id,
+      p_market_id: mId,
+      p_market_title: def.title,
+      p_category_id: def.catKey,
+      p_option: option,
+      p_amount: parseFloat(amount),
+      p_odds: parseFloat(odds.toFixed(3)),
+      p_potential_payout: payout
+    });
+
+    if (error || data?.error) {
+      // Reverte em caso de erro
+      STATE.balance += amount;
+      m.pools[option] = Math.max(0, (m.pools[option] || 0) - amount);
+      m.betters[option] = Math.max(0, (m.betters[option] || 0) - 1);
+      STATE.bets = STATE.bets.filter(b => b.id !== bet.id);
+      updateBalanceDisplay();
+      showToast('Erro ao registrar aposta: ' + (data?.error || error?.message), 'info');
+      updateSubmitBtn(mId);
+      return;
+    }
+
+    // Atualiza bet ID real do banco
+    bet.id = data.bet_id || bet.id;
+
+    // Sincroniza saldo real do banco
+    await syncBalanceFromDB();
+  }
+
+  // Update UI
+  updateMarketCard(mId);
+  updateSubmitBtn(mId);
+  renderHistory();
+  renderRanking();
+  updateStats();
+
+  // Reset selection
+  STATE.selectedOptions[mId] = null;
+  STATE.selectedAmounts[mId] = null;
+  def.options.forEach((_, i) => {
+    const el = document.getElementById(`opt-${mId}-${i}`);
+    if (el) el.classList.remove('selected');
+  });
+  [5,10,20].forEach(v => {
+    const el = document.getElementById(`amt-${mId}-${v}`);
+    if (el) el.classList.remove('active');
+  });
+  const customInput = document.getElementById(`custom-amt-${mId}`);
+  const customWrap = document.getElementById(`custom-wrap-${mId}`);
+  if (customInput) customInput.value = '';
+  if (customWrap) customWrap.classList.remove('active');
+
+  showToast(`✅ R$${amount} em "${option}" — Retorno potencial: R$${payout}`, 'info');
+  animateBetConfirm(mId);
+}
+
+function animateBetConfirm(mId) {
+  const card = document.getElementById('card-' + mId);
+  if (!card) return;
+  card.style.transform = 'scale(1.02)';
+  card.style.borderColor = 'var(--accent)';
+  card.style.boxShadow = '0 0 30px rgba(0,229,255,0.2)';
+  setTimeout(() => {
+    card.style.transform = '';
+    card.style.borderColor = '';
+    card.style.boxShadow = '';
+  }, 400);
+}
+
+// ─────────────────────────────────────────────
+//  ADMIN
+// ─────────────────────────────────────────────
+function toggleAdmin() {
+  const p = document.getElementById('admin-panel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) { adminTab('results'); }
+}
+
+// ─────────────────────────────────────────────
+//  ADMIN FULL CONTROL JS
+// ─────────────────────────────────────────────
+
+let currentAdminTab = 'results';
+let _editMarketId = null;
+let _editCatKey = null;
+
+function adminTab(tab) {
+  currentAdminTab = tab;
+  ['results','markets','categories','tools'].forEach(t => {
+    const el = document.getElementById('atab-' + t);
+    const btn = document.getElementById('anav-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'results') renderAdmin();
+  if (tab === 'markets') { populateCatSelect(); renderAdminMarkets(); }
+  if (tab === 'categories') renderAdminCategories();
+  if (tab === 'tools') renderAdminStats();
+}
+
+// ── RESULTS TAB ──
+// (renderAdmin already defined below)
+
+// ── MARKETS TAB ──
+function populateCatSelect() {
+  const sel = document.getElementById('admin-market-cat-select');
+  if (!sel) return;
+  sel.innerHTML = Object.entries(CATEGORIES).map(([k, c]) =>
+    `<option value="${k}">${c.label}</option>`
+  ).join('');
+  sel.value = activeCategory;
+}
+
+function renderAdminMarkets() {
+  const sel = document.getElementById('admin-market-cat-select');
+  const catKey = sel ? sel.value : activeCategory;
+  const list = document.getElementById('admin-markets-list');
+  if (!list) return;
+  const cat = CATEGORIES[catKey];
+  if (!cat || !cat.markets.length) {
+    list.innerHTML = '<div style="color:var(--muted);padding:20px;font-size:14px;">Nenhum mercado nesta categoria.</div>';
+    return;
+  }
+  list.innerHTML = cat.markets.map((m, idx) => {
+    const runtime = markets[m.id];
+    const status = runtime ? runtime.status : 'open';
+    const statusColor = status === 'open' ? 'var(--green)' : status === 'resolved' ? 'var(--accent)' : 'var(--gold)';
+    return `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">${m.title}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+            ⏱ ${m.duration}s &nbsp;|&nbsp; ${m.options.length} opções &nbsp;|&nbsp;
+            <span style="color:${statusColor}">${status}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">${m.options.join(' · ')}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="admin-resolve-btn" onclick="openEditMarketModal('${catKey}','${m.id}')">✏️ Editar</button>
+          <button class="admin-resolve-btn" style="color:var(--red);border-color:rgba(255,23,68,0.3);" onclick="deleteMarket('${catKey}','${m.id}')">🗑️ Excluir</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openNewMarketModal() {
+  const sel = document.getElementById('admin-market-cat-select');
+  _editMarketId = null;
+  _editCatKey = sel ? sel.value : activeCategory;
+  document.getElementById('market-modal-title').textContent = '📋 Novo Mercado';
+  document.getElementById('market-modal-question').value = '';
+  document.getElementById('market-modal-duration').value = '60';
+  renderOptionFields(['', '']);
+  document.getElementById('market-modal').classList.add('open');
+}
+
+function openEditMarketModal(catKey, mId) {
+  _editCatKey = catKey;
+  _editMarketId = mId;
+  const cat = CATEGORIES[catKey];
+  const m = cat.markets.find(x => x.id === mId);
+  if (!m) return;
+  document.getElementById('market-modal-title').textContent = '✏️ Editar Mercado';
+  document.getElementById('market-modal-question').value = m.title;
+  document.getElementById('market-modal-duration').value = m.duration;
+  renderOptionFields(m.options);
+  document.getElementById('market-modal').classList.add('open');
+}
+
+function renderOptionFields(opts) {
+  const container = document.getElementById('market-modal-options');
+  container.innerHTML = opts.map((o, i) => `
+    <div style="display:flex;gap:6px;margin-bottom:6px;" id="optrow-${i}">
+      <input class="modal-input" style="flex:1;margin:0;" type="text" placeholder="Opção ${i+1}" value="${o}" id="optfield-${i}">
+      <button class="btn btn-ghost" style="padding:8px 10px;font-size:16px;flex-shrink:0;" onclick="removeOptionField(${i})">×</button>
+    </div>
+  `).join('');
+  // store count
+  container.dataset.count = opts.length;
+}
+
+function addOptionField() {
+  const container = document.getElementById('market-modal-options');
+  const count = parseInt(container.dataset.count || 0);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
+  row.id = 'optrow-' + count;
+  row.innerHTML = `
+    <input class="modal-input" style="flex:1;margin:0;" type="text" placeholder="Opção ${count+1}" id="optfield-${count}">
+    <button class="btn btn-ghost" style="padding:8px 10px;font-size:16px;flex-shrink:0;" onclick="removeOptionField(${count})">×</button>
+  `;
+  container.appendChild(row);
+  container.dataset.count = count + 1;
+}
+
+function removeOptionField(idx) {
+  const row = document.getElementById('optrow-' + idx);
+  if (row) row.remove();
+}
+
+function saveMarket() {
+  const title = document.getElementById('market-modal-question').value.trim();
+  const duration = parseInt(document.getElementById('market-modal-duration').value) || 60;
+  // Collect options from all remaining optfield inputs
+  const allInputs = document.querySelectorAll('[id^="optfield-"]');
+  const options = Array.from(allInputs).map(i => i.value.trim()).filter(Boolean);
+
+  if (!title) { showToast('Digite a pergunta do mercado', 'info'); return; }
+  if (options.length < 2) { showToast('Adicione pelo menos 2 opções', 'info'); return; }
+
+  const cat = CATEGORIES[_editCatKey];
+  if (!cat) return;
+
+  if (_editMarketId) {
+    // Edit existing
+    const m = cat.markets.find(x => x.id === _editMarketId);
+    if (m) {
+      m.title = title;
+      m.duration = duration;
+      m.options = options;
+      // Reset runtime
+      markets[m.id] = { ...m, catKey: _editCatKey, category: cat.label,
+        pools: options.reduce((a,o) => ({...a,[o]:0}),{}),
+        betters: options.reduce((a,o) => ({...a,[o]:0}),{}),
+        status: 'open', timeLeft: duration, winner: null };
+    }
+    showToast('Mercado atualizado!', 'info');
+  } else {
+    // New market
+    const newId = 'custom_' + Date.now();
+    const newMarket = { id: newId, title, duration, options };
+    cat.markets.push(newMarket);
+    markets[newId] = { ...newMarket, catKey: _editCatKey, category: cat.label,
+      pools: options.reduce((a,o) => ({...a,[o]:0}),{}),
+      betters: options.reduce((a,o) => ({...a,[o]:0}),{}),
+      status: 'open', timeLeft: duration, winner: null };
+    // Rebuild MARKETS_DEF
+    rebuildMarketsDef();
+    showToast('Mercado criado!', 'info');
+  }
+
+  closeModal('market-modal');
+  renderAdminMarkets();
+  if (activeCategory === _editCatKey) renderMarkets();
+  renderCategoryTabs();
+}
+
+function deleteMarket(catKey, mId) {
+  if (!confirm('Excluir este mercado?')) return;
+  const cat = CATEGORIES[catKey];
+  cat.markets = cat.markets.filter(m => m.id !== mId);
+  delete markets[mId];
+  rebuildMarketsDef();
+  renderAdminMarkets();
+  if (activeCategory === catKey) renderMarkets();
+  showToast('Mercado excluído.', 'info');
+}
+
+// ── CATEGORIES TAB ──
+function renderAdminCategories() {
+  const list = document.getElementById('admin-categories-list');
+  if (!list) return;
+  list.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:15px;font-weight:700;">${cat.label}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px;">
+          ${cat.markets.length} mercados &nbsp;|&nbsp; chave: ${key}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="admin-resolve-btn" onclick="openEditCategoryModal('${key}')">✏️ Editar</button>
+        <button class="admin-resolve-btn" style="color:var(--red);border-color:rgba(255,23,68,0.3);" onclick="deleteCategory('${key}')">🗑️ Excluir</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openNewCategoryModal() {
+  _editCatKey = null;
+  document.getElementById('cat-modal-title').textContent = '🗂️ Nova Categoria';
+  document.getElementById('cat-modal-name').value = '';
+  document.getElementById('cat-modal-label').value = '';
+  document.getElementById('cat-modal-oldkey').value = '';
+  document.getElementById('category-modal').classList.add('open');
+}
+
+function openEditCategoryModal(key) {
+  _editCatKey = key;
+  const cat = CATEGORIES[key];
+  document.getElementById('cat-modal-title').textContent = '✏️ Editar Categoria';
+  document.getElementById('cat-modal-name').value = key;
+  document.getElementById('cat-modal-label').value = cat.label;
+  document.getElementById('cat-modal-oldkey').value = key;
+  document.getElementById('category-modal').classList.add('open');
+}
+
+function saveCategory() {
+  const name = document.getElementById('cat-modal-name').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const label = document.getElementById('cat-modal-label').value.trim();
+  const oldKey = document.getElementById('cat-modal-oldkey').value;
+
+  if (!name || !label) { showToast('Preencha todos os campos', 'info'); return; }
+
+  if (oldKey && oldKey !== name) {
+    // Rename: copy and delete old
+    CATEGORIES[name] = { ...CATEGORIES[oldKey], label };
+    delete CATEGORIES[oldKey];
+    if (activeCategory === oldKey) activeCategory = name;
+  } else if (oldKey) {
+    CATEGORIES[oldKey].label = label;
+  } else {
+    // New category
+    CATEGORIES[name] = { label, markets: [] };
+  }
+
+  rebuildMarketsDef();
+  renderAdminCategories();
+  renderCategoryTabs();
+  closeModal('category-modal');
+  showToast(oldKey ? 'Categoria atualizada!' : 'Categoria criada!', 'info');
+}
+
+function deleteCategory(key) {
+  if (Object.keys(CATEGORIES).length <= 1) { showToast('Não é possível excluir a última categoria.', 'info'); return; }
+  if (!confirm('Excluir categoria e todos seus mercados?')) return;
+  // Clean up market runtimes
+  (CATEGORIES[key].markets || []).forEach(m => delete markets[m.id]);
+  delete CATEGORIES[key];
+  if (activeCategory === key) activeCategory = Object.keys(CATEGORIES)[0];
+  rebuildMarketsDef();
+  renderAdminCategories();
+  renderCategoryTabs();
+  renderMarkets();
+  showToast('Categoria excluída.', 'info');
+}
+
+// ── TOOLS TAB ──
+function renderAdminStats() {
+  const el = document.getElementById('admin-stats');
+  if (!el) return;
+  const totalBets = STATE.bets.length;
+  const totalWon = STATE.bets.filter(b => b.status === 'won').length;
+  const totalLost = STATE.bets.filter(b => b.status === 'lost').length;
+  const totalPool = STATE.bets.reduce((s, b) => s + b.amount, 0);
+  el.innerHTML = `
+    Apostas totais: ${totalBets}<br>
+    Ganhas: ${totalWon} | Perdidas: ${totalLost}<br>
+    Volume total: R$${totalPool.toFixed(2)}<br>
+    Saldo atual: R$${STATE.balance.toFixed(2)}
+  `;
+  document.getElementById('house-edge-input').value = Math.round(HOUSE_EDGE_VAL * 100);
+  document.getElementById('current-house-edge').textContent = Math.round(HOUSE_EDGE_VAL * 100) + '%';
+}
+
+function addBalanceAmt(amt) {
+  STATE.balance += amt;
+  updateBalanceDisplay('win-flash');
+  saveState();
+  showToast(`+R$${amt} adicionado ao saldo`, 'info');
+}
+
+function clearHistory() {
+  if (!confirm('Limpar todo o histórico de apostas?')) return;
+  STATE.bets = [];
+  saveState();
+  renderHistory();
+  renderAdminStats();
+  showToast('Histórico limpo.', 'info');
+}
+
+function saveHouseEdge() {
+  const val = parseFloat(document.getElementById('house-edge-input').value);
+  if (isNaN(val) || val < 0 || val > 30) { showToast('Valor inválido (0–30)', 'info'); return; }
+  HOUSE_EDGE_VAL = val / 100;
+  document.getElementById('current-house-edge').textContent = val + '%';
+  showToast(`House edge definido em ${val}%`, 'info');
+}
+
+// ── HELPERS ──
+function rebuildMarketsDef() {
+  MARKETS_DEF.length = 0;
+  Object.entries(CATEGORIES).forEach(([catKey, cat]) => {
+    cat.markets.forEach(m => {
+      MARKETS_DEF.push({ ...m, catKey, category: cat.label });
+    });
+  });
+}
+
+async function resolveMarket(mId, winner) {
+  const m = markets[mId];
+  if (m.status === 'resolved') { showToast('Já resolvido!', 'info'); return; }
+
+  const totalPool = Object.values(m.pools).reduce((a, b) => a + b, 0);
+  const winnerPool = m.pools[winner] || 0;
+  let myWin = 0, myLoss = 0;
+
+  STATE.bets.forEach(bet => {
+    if (bet.marketId !== mId || bet.status !== 'pending') return;
+    if (bet.option === winner) {
+      const odds = winnerPool > 0 ? (totalPool * (1 - HOUSE_EDGE_VAL)) / winnerPool : 1;
+      const payout = parseFloat((bet.amount * odds).toFixed(2));
+      bet.payout = payout; bet.status = 'won';
+      myWin += payout;
+    } else {
+      bet.status = 'lost'; myLoss += bet.amount;
+    }
+  });
+
+  m.status = 'resolved'; m.winner = winner;
+
+  if (STATE.supabaseSession) {
+    const { data, error } = await sb.rpc('resolve_market', {
+      p_market_id: mId, p_winner: winner,
+      p_resolved_by: STATE.supabaseSession.user.id
+    });
+    if (error) showToast('Erro ao resolver: ' + error.message, 'info');
+    else {
+      setTimeout(syncBalanceFromDB, 500);
+      setTimeout(syncBetsFromDB, 800);
+    }
+  } else {
+    STATE.balance += myWin;
+  }
+
+  updateBalanceDisplay(myWin > 0 ? 'win-flash' : null);
+  renderHistory(); renderRanking(); updateStats();
+
+  const card = document.getElementById('card-' + mId);
+  if (card) card.classList.add('resolved');
+  const submitBtn = document.getElementById('submit-' + mId);
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '✓ Mercado Resolvido'; }
+
+  if (myWin > 0) {
+    spawnConfetti();
+    showWinPopup(STATE.user.name, myWin, MARKETS_DEF.find(d=>d.id===mId)?.title || '', winner);
+    showResultOverlay(true, myWin, winner);
+  } else if (myLoss > 0) {
+    showResultOverlay(false, myLoss, winner);
+  } else {
+    showToast('Resultado: "' + winner + '"', 'info');
+  }
+}
+
+function refundCurrentRound() {
+  let count = 0;
+  let totalRefunded = 0;
+
+  STATE.bets.forEach(b => {
+    if (b.status === 'pending') {
+      b.status = 'refunded';
+      STATE.balance += b.amount;
+      totalRefunded += b.amount;
+      count++;
+    }
+  });
+
+  if (count === 0) {
+    showToast('Nenhuma aposta pendente para reembolsar.', 'info');
+    return;
+  }
+
+  // Reset mercados abertos para aceitar novas apostas
+  Object.values(markets).forEach(m => {
+    if (m.status === 'open') {
+      const def = MARKETS_DEF.find(d => d.id === m.id);
+      if (def) {
+        m.pools = def.options.reduce((a, o) => ({ ...a, [o]: 0 }), {});
+        m.betters = def.options.reduce((a, o) => ({ ...a, [o]: 0 }), {});
+        STATE.selectedOptions[m.id] = null;
+        STATE.selectedAmounts[m.id] = null;
+      }
+    }
+  });
+
+  saveState();
+  renderMarkets();
+  updateBalanceDisplay();
+  renderHistory();
+
+  // Mostra banner para o próprio admin também
+  const msg = 'O vídeo apresentou instabilidade e a rodada foi cancelada pelo administrador. Sua aposta foi reembolsada integralmente.';
+  showRefundBanner(msg, totalRefunded);
+
+  // Transmite para todos os usuários conectados via Supabase Realtime
+  broadcastRefund(msg, totalRefunded);
+
+  showToast('✅ ' + count + ' aposta(s) reembolsada(s) — R$ ' + totalRefunded.toFixed(2) + ' devolvido(s).', 'info');
+}
+
+function resetAllMarkets() {
+  MARKETS_DEF.forEach(def => {
+    const m = markets[def.id];
+    m.pools = def.options.reduce((a, o) => ({ ...a, [o]: 0 }), {});
+    m.betters = def.options.reduce((a, o) => ({ ...a, [o]: 0 }), {});
+    m.status = 'open';
+    m.timeLeft = def.duration;
+    m.winner = null;
+    STATE.selectedOptions[def.id] = null;
+    STATE.selectedAmounts[def.id] = null;
+  });
+  seedFakeBets();
+  STATE.bets.forEach(b => { if (b.status === 'pending') { b.status = 'refunded'; STATE.balance += b.amount; } });
+  saveState();
+  renderMarkets();
+  renderAdmin();
+  updateBalanceDisplay();
+  renderHistory();
+  showToast('Mercados resetados!', 'info');
+}
+
+function addBalance() { addBalanceAmt(50); }
+
+// ─────────────────────────────────────────────
+//  RESULT OVERLAY
+// ─────────────────────────────────────────────
+function showResultOverlay(win, amount, option) {
+  const overlay = document.getElementById('result-overlay');
+  const card = document.getElementById('result-card');
+  if (win) {
+    card.innerHTML = `
+      <span class="result-emoji">🏆</span>
+      <div class="result-title result-win">GANHOU!</div>
+      <div class="result-amount" style="color:var(--green)">+R$ ${amount.toFixed(2)}</div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:24px;">Opção correta: ${option}</div>
+      <button class="btn btn-accent" style="padding:14px 32px;font-size:15px;" onclick="closeResult()">Continuar →</button>
+    `;
+  } else {
+    card.innerHTML = `
+      <span class="result-emoji">😤</span>
+      <div class="result-title result-lose">PERDEU</div>
+      <div class="result-amount" style="color:var(--red)">-R$ ${amount.toFixed(2)}</div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:24px;">Resultado: ${option}</div>
+      <button class="btn btn-accent" style="padding:14px 32px;font-size:15px;" onclick="closeResult()">Tentar Novamente →</button>
+    `;
+  }
+  overlay.classList.add('open');
+}
+
+function closeResult() {
+  document.getElementById('result-overlay').classList.remove('open');
+}
+
+// ─────────────────────────────────────────────
+//  CONFETTI
+// ─────────────────────────────────────────────
+function spawnConfetti() {
+  const colors = ['#00e5ff','#7c3aed','#00e676','#ffd600','#ff4081'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top: -10px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      --dx: ${(Math.random() - 0.5) * 200}px;
+      --dur: ${0.8 + Math.random() * 1.5}s;
+      transform: rotate(${Math.random() * 360}deg);
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2500);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { win: '🏆', lose: '💸', info: '⚡' };
+  toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3100);
+}
+
+// ─────────────────────────────────────────────
+//  DEPOSIT / WITHDRAW
+// ─────────────────────────────────────────────
+let selectedDeposit = 0;
+
+function openDeposit() { document.getElementById('deposit-modal').classList.add('open'); }
+function closeDeposit() {
+  document.getElementById('deposit-modal').classList.remove('open');
+  document.getElementById('deposit-amount-input').style.display = 'none';
+  document.querySelectorAll('.deposit-amount-btn').forEach(b => b.classList.remove('active'));
+  selectedDeposit = 0;
+}
+
+function selectDeposit(val) {
+  selectedDeposit = val;
+  document.querySelectorAll('.deposit-amount-btn').forEach(b => b.classList.remove('active'));
+  if (val === 0) {
+    document.getElementById('deposit-amount-input').style.display = 'block';
+    document.getElementById('custom-deposit-btn').classList.add('active');
+  } else {
+    document.getElementById('deposit-amount-input').style.display = 'none';
+    event.target.classList.add('active');
+  }
+}
+
+function confirmDeposit() {
+  let amount = selectedDeposit;
+  if (amount === 0) amount = parseFloat(document.getElementById('deposit-amount-input').value);
+  if (!amount || amount <= 0) { showToast('Valor inválido', 'info'); return; }
+  STATE.balance += amount;
+  updateBalanceDisplay('win-flash');
+  saveState();
+  closeDeposit();
+  showToast(`+R$${amount.toFixed(2)} depositado com sucesso!`, 'win');
+}
+
+function openWithdraw() {
+  showToast('Saque disponível em breve. (Funcionalidade em desenvolvimento)', 'info');
+}
+
+// ─────────────────────────────────────────────
+//  VIDEO
+// ─────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let _externalStreamUrl = '';
+
+// ── VIDEO PER-CATEGORY ──
+function loadCategoryVideo(catKey) {
+  if (_fallbackTimer) clearTimeout(_fallbackTimer);
+  const cat = CATEGORIES[catKey];
+  const url = cat && cat.videoUrl ? cat.videoUrl : '';
+  const placeholder = document.getElementById('video-placeholder');
+  const iframe = document.getElementById('live-iframe');
+  const external = document.getElementById('live-external');
+  const placeholderText = document.getElementById('video-placeholder-text');
+
+  // Reset
+  iframe.src = '';
+  iframe.style.display = 'none';
+  external.style.display = 'none';
+  placeholder.style.display = 'flex';
+  document.getElementById('video-blocker').style.display = 'none';
+
+  if (placeholderText && cat) {
+    placeholderText.textContent = 'Stream de ' + cat.label + ' — configure abaixo';
+  }
+
+  if (!url) return;
+
+  _externalStreamUrl = url;
+
+  // Already an embed URL (saved previously)
+  if (url.includes('/embed/') || url.includes('player.twitch.tv')) {
+    showIframe(url);
+    return;
+  }
+
+  const twitchMatch = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)/);
+  if (twitchMatch) {
+    const host = location.hostname || 'localhost';
+    showIframe(`https://player.twitch.tv/?channel=${twitchMatch[1]}&parent=${host}&autoplay=true&muted=true`);
+    return;
+  }
+
+  const ytMatch = url.match(/(?:[?&]v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch) {
+    const origin = location.origin || 'https://localhost';
+    showIframe(`https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&mute=1&rel=0&origin=${encodeURIComponent(origin)}&enablejsapi=1`);
+    if (cat && cat.videoUrl2) startFallbackTimer(cat.videoUrl2);
+    return;
+  }
+
+  if (url.startsWith('http')) {
+    showIframe(url);
+    if (cat && cat.videoUrl2) startFallbackTimer(cat.videoUrl2);
+  }
+}
+
+function setVideoUrl() {
+  const cat = CATEGORIES[activeCategory];
+  const input = document.getElementById('video-url-input');
+  const input2 = document.getElementById('video-url-input2');
+  if (input) input.value = (cat && cat.videoUrl) ? cat.videoUrl : '';
+  if (input2) input2.value = (cat && cat.videoUrl2) ? cat.videoUrl2 : '';
+  const lbl = document.getElementById('video-modal-cat-label');
+  if (lbl && cat) lbl.textContent = cat.label;
+  document.getElementById('video-modal').classList.add('open');
+}
+
+let _fallbackTimer = null;
+
+function buildEmbedUrl(url) {
+  if (!url) return null;
+  if (url.includes('/embed/') || url.includes('player.twitch.tv')) return url;
+  const twitchMatch = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)/);
+  if (twitchMatch) {
+    const host = location.hostname || 'localhost';
+    return `https://player.twitch.tv/?channel=${twitchMatch[1]}&parent=${host}&autoplay=true&muted=true`;
+  }
+  const ytMatch = url.match(/(?:[?&]v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch) {
+    const origin = location.origin || 'https://localhost';
+    return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&mute=1&rel=0&origin=${encodeURIComponent(origin)}&enablejsapi=1`;
+  }
+  if (url.startsWith('http')) return url;
+  return null;
+}
+
+function startFallbackTimer(backupUrl) {
+  if (_fallbackTimer) clearTimeout(_fallbackTimer);
+  if (!backupUrl) return;
+  _fallbackTimer = setTimeout(() => {
+    const embedUrl = buildEmbedUrl(backupUrl);
+    if (embedUrl) {
+      showIframe(embedUrl);
+      showToast('🔁 Trocado para vídeo backup automaticamente.', 'info');
+    }
+  }, 2 * 60 * 1000);
+}
+
+function confirmVideoUrl() {
+  const url = document.getElementById('video-url-input').value.trim();
+  const input2 = document.getElementById('video-url-input2');
+  const url2 = input2 ? input2.value.trim() : '';
+  if (!url) return;
+
+  if (CATEGORIES[activeCategory]) {
+    CATEGORIES[activeCategory].videoUrl = url;
+    CATEGORIES[activeCategory].videoUrl2 = url2;
+    saveAdminState();
+  }
+
+  _externalStreamUrl = url;
+
+  const embedUrl = buildEmbedUrl(url);
+  if (embedUrl) {
+    showIframe(embedUrl);
+    closeModal('video-modal');
+    if (url2) startFallbackTimer(url2);
+    return;
+  }
+
+  showToast('URL inválida. Use YouTube ou Twitch.', 'info');
+}
+
+function showIframe(embedUrl) {
+  document.getElementById('video-blocker').style.display = 'block';
+  document.getElementById('video-placeholder').style.display = 'none';
+  document.getElementById('live-external').style.display = 'none';
+  const iframe = document.getElementById('live-iframe');
+  iframe.src = embedUrl;
+  iframe.style.display = 'block';
+}
+
+function showFallback(url) {
+  document.getElementById('video-placeholder').style.display = 'none';
+  document.getElementById('live-iframe').style.display = 'none';
+  const ext = document.getElementById('live-external');
+  ext.style.display = 'flex';
+  document.getElementById('external-url-label').textContent = url;
+}
+
+function openExternalStream() {
+  if (_externalStreamUrl) window.open(_externalStreamUrl, '_blank');
+}
+
+// ─────────────────────────────────────────────
+//  HISTORY
+// ─────────────────────────────────────────────
+function renderHistory() {
+  const tbody = document.getElementById('history-tbody');
+  if (STATE.bets.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:24px;">Nenhuma aposta ainda</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...STATE.bets].reverse().slice(0, 20).map(bet => `
+    <tr>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${bet.marketTitle}</td>
+      <td>${bet.option}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">R$${bet.amount.toFixed(2)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:${bet.status==='won'?'var(--green)':bet.status==='lost'?'var(--red)':'var(--muted)'}">
+        ${bet.status === 'won' ? '+R$' + bet.payout.toFixed(2) : bet.status === 'lost' ? '-R$'+bet.amount.toFixed(2) : '—'}
+      </td>
+      <td><span class="hist-status hist-${bet.status}">${{pending:'Aguardando',won:'Ganhou',lost:'Perdeu',refunded:'Devolvido'}[bet.status]}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  RANKING
+// ─────────────────────────────────────────────
+// Track previous positions for animation
+let _prevRankOrder = [];
+
+function renderRanking() {
+  const list = document.getElementById('ranking-list');
+  if (!list) return;
+
+  const medals = ['🥇','🥈','🥉','4º','5º','6º','7º','8º','9º','10º'];
+
+  const fakeUsers = (STATE._fakeUsers || []).map(u => ({...u}));
+  const myGains = STATE.bets.filter(b => b.status === 'won').reduce((s,b) => s + (b.payout - b.amount), 0);
+  const me = STATE.user ? { name: STATE.user.name + ' 👈', balance: STATE.balance, gains: myGains, isMe: true } : null;
+
+  const pool = me ? [me, ...fakeUsers] : fakeUsers;
+  const all = pool.sort((a, b) => b.balance - a.balance).slice(0, 10);
+
+  if (all.length === 0) {
+    list.innerHTML = '<div style="padding:20px;color:var(--muted);text-align:center;font-size:13px;">Carregando...</div>';
+    return;
+  }
+
+  list.innerHTML = all.map((p, i) => {
+    const prevIdx = _prevRankOrder.indexOf(p.name);
+    const moved = prevIdx !== -1 && prevIdx !== i;
+    const arrow = moved && prevIdx > i
+      ? ' <span style="color:var(--green);font-size:10px;">▲</span>'
+      : moved && prevIdx < i
+      ? ' <span style="color:var(--red);font-size:10px;">▼</span>'
+      : '';
+    const gains = (p.gains || 0).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+    const bal   = p.balance.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+    return `<div class="ranking-item" style="${p.isMe ? 'background:rgba(0,229,255,0.05);border-left:2px solid var(--accent);' : ''}">
+      <div class="rank-num ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${medals[i]}</div>
+      <div class="rank-name" style="${p.isMe ? 'color:var(--accent);' : ''}">${p.name}${arrow}</div>
+      <div class="rank-gains">+R$ ${gains}</div>
+      <div class="rank-balance">R$ ${bal}</div>
+    </div>`;
+  }).join('');
+
+  _prevRankOrder = all.map(p => p.name);
+}
+
+function oscillateRanking() {
+  // Update balances + rotate users every 3s
+  setInterval(() => {
+    if (!STATE._fakeUsers) return;
+
+    // Update ALL users with big swings (high-value bettors)
+    STATE._fakeUsers.forEach(u => {
+      if (Math.random() < 0.75) {
+        // Win: R$50–R$2000 per tick
+        const win = 50 + Math.random() * 1950;
+        u.balance += win;
+        u.gains = (u.gains || 0) + win;
+      } else {
+        // Loss: R$30–R$500
+        const loss = 30 + Math.random() * 470;
+        u.balance = Math.max(1000, u.balance - loss);
+      }
+      u.balance = parseFloat(u.balance.toFixed(2));
+      u.gains   = parseFloat((u.gains || 0).toFixed(2));
+    });
+
+    // Rotate: replace 2-3 users with new high rollers
+    const rotate = 2 + Math.floor(Math.random() * 2);
+    STATE._fakeUsers.sort((a,b) => b.balance - a.balance);
+    for (let i = 0; i < rotate; i++) {
+      const replaceIdx = STATE._fakeUsers.length - 1 - i;
+      const newBal = 4000 + Math.random() * 8000;
+      STATE._fakeUsers[replaceIdx] = {
+        name: randomName(),
+        balance: parseFloat(newBal.toFixed(2)),
+        gains:   parseFloat((newBal * (0.3 + Math.random() * 0.5)).toFixed(2)),
+      };
+    }
+
+    renderRanking();
+  }, 3000);
+}
+
+// ─────────────────────────────────────────────
+//  STATS
+// ─────────────────────────────────────────────
+function updateStats() {
+  const totalBetters = Object.values(markets).reduce((sum, m) =>
+    sum + Object.values(m.betters).reduce((a, b) => a + b, 0), 0);
+  const totalPool = Object.values(markets).reduce((sum, m) =>
+    sum + Object.values(m.pools).reduce((a, b) => a + b, 0), 0);
+
+  document.getElementById('total-users-stat').textContent = _onlineCount.toLocaleString('pt-BR');
+}
+
+// ─────────────────────────────────────────────
+//  LIVE FAKE ACTIVITY ENGINE
+// ─────────────────────────────────────────────
+
+// Nomes gerados com primeiro nome + inicial diferente a cada vez
+const _FIRST = ['Rafael','Ana','Bruno','Juliana','Diego','Mariana','Carlos','Fernanda',
+  'Lucas','Gabriel','Camila','Pedro','Leticia','Thiago','Isabella','Matheus','Vitória',
+  'Rodrigo','Amanda','Felipe','Beatriz','Gustavo','Larissa','Anderson','Natalia',
+  'Leonardo','Sophia','Vinicius','Julia','Henrique','Aline','Danilo','Patricia',
+  'Eduardo','Renata','Caio','Luciana','Igor','Claudia','Marcelo','Vanessa','Leandro',
+  'Priscila','Fábio','Carla','Tiago','Sandra','André','Tatiana','Renan','Débora',
+  'Sandro','Miriam','Cleber','Elisangela','Welton','Daiane','Evandro','Rosana'];
+const _LAST_INIT = 'ABCDEFGHJKLMNOPRSTV';
+
+const FAKE_EMOJIS = ['🦊','🐺','🦅','🐯','🦁','🐻','🦈','🐲','🎯','⚡','🔥','💎','🚀','🎲','🏹','🌊','🎪','🦋'];
+
+let _usedNames = new Set();
+let _feedItems = [];
+let _onlineCount = 0;
+let _winPopupQueue = [];
+let _winPopupShowing = false;
+
+function randomName() {
+  // Generate unique name combos; reset if pool exhausted
+  if (_usedNames.size > 40) _usedNames.clear();
+  let name, tries = 0;
+  do {
+    const first = _FIRST[Math.floor(Math.random() * _FIRST.length)];
+    const last = _LAST_INIT[Math.floor(Math.random() * _LAST_INIT.length)] + '.';
+    name = first + ' ' + last;
+    tries++;
+  } while (_usedNames.has(name) && tries < 20);
+  _usedNames.add(name);
+  return name;
+}
+
+function randomEmoji() { return FAKE_EMOJIS[Math.floor(Math.random() * FAKE_EMOJIS.length)]; }
+
+function randomAmount() {
+  // Weighted: mais valores baixos/médios, poucos altos — parece real
+  const r = Math.random();
+  if (r < 0.25) return 5;
+  if (r < 0.45) return 10;
+  if (r < 0.60) return 15;
+  if (r < 0.72) return 20;
+  if (r < 0.82) return 25;
+  if (r < 0.89) return 30;
+  if (r < 0.94) return 50;
+  if (r < 0.97) return 75;
+  if (r < 0.99) return 100;
+  return Math.floor(Math.random() * 400 + 150); // raro: valor alto
+}
+
+function randomPayout(betAmt) {
+  // Odds variadas: 1.1x até 8x, mais concentrado entre 1.3x e 3x
+  const r = Math.random();
+  let multiplier;
+  if (r < 0.15) multiplier = 1.1 + Math.random() * 0.3;       // 1.1–1.4 (low)
+  else if (r < 0.55) multiplier = 1.4 + Math.random() * 1.2;  // 1.4–2.6 (common)
+  else if (r < 0.80) multiplier = 2.6 + Math.random() * 1.4;  // 2.6–4.0
+  else if (r < 0.93) multiplier = 4.0 + Math.random() * 2.0;  // 4.0–6.0
+  else multiplier = 6.0 + Math.random() * 2.0;                 // 6.0–8.0 (rare big win)
+  return (betAmt * multiplier).toFixed(2);
+}
+function timeAgo(seconds) {
+  if (seconds < 5) return 'agora';
+  if (seconds < 60) return seconds + 's atrás';
+  return Math.floor(seconds/60) + 'min atrás';
+}
+
+function addFeedItem(item) {
+  _feedItems.unshift({ ...item, ts: Date.now() });
+  if (_feedItems.length > 30) _feedItems = _feedItems.slice(0, 30);
+  renderFeed();
+}
+
+function renderFeed() {
+  const list = document.getElementById('live-feed-list');
+  if (!list) return;
+
+  const html = _feedItems.slice(0, 8).map(item => {
+    const secsAgo = Math.floor((Date.now() - item.ts) / 1000);
+    if (item.type === 'bet') {
+      const betVerbs = ['entrou com','previu','participou com','escolheu','apostou em'];
+      const verb = betVerbs[Math.floor(Math.random() * betVerbs.length)];
+      return `<div class="feed-item">
+        <div class="feed-avatar bet">${item.emoji}</div>
+        <div class="feed-text">
+          <strong>${item.name}</strong> ${verb} <strong>${item.option}</strong>
+          <div class="feed-market">${item.market}</div>
+        </div>
+        <div class="feed-amount" style="color:var(--muted)">-R$${item.amount}</div>
+        <div class="feed-time">${timeAgo(secsAgo)}</div>
+      </div>`;
+    }
+    if (item.type === 'win') {
+      const payoutNum = parseFloat(item.payout);
+      const isHighWin = payoutNum >= 80;
+      const winVerbs = ['acertou e ganhou','previu certo','acertou!','ganhou com','venceu em'];
+      const verb = winVerbs[Math.floor(Math.random() * winVerbs.length)];
+      return `<div class="feed-item">
+        <div class="feed-avatar win">${isHighWin ? '🔥' : '🏆'}</div>
+        <div class="feed-text">
+          <strong>${item.name}</strong> ${verb} <strong>${item.option}</strong>
+          <div class="feed-market">${item.market}</div>
+        </div>
+        <div class="feed-amount green" style="${isHighWin ? 'color:#ffd600;font-size:15px;' : ''}">+R$${item.payout}</div>
+        <div class="feed-time">${timeAgo(secsAgo)}</div>
+      </div>`;
+    }
+    if (item.type === 'join') {
+      const joinTexts = ['entrou na plataforma','começou a participar','acabou de entrar','se juntou ao mercado'];
+      const txt = joinTexts[Math.floor(Math.random() * joinTexts.length)];
+      return `<div class="feed-item">
+        <div class="feed-avatar join">👋</div>
+        <div class="feed-text"><strong>${item.name}</strong> ${txt}</div>
+        <div class="feed-amount muted"></div>
+        <div class="feed-time">${timeAgo(secsAgo)}</div>
+      </div>`;
+    }
+    return '';
+  }).join('');
+
+  list.innerHTML = html;
+
+  const countEl = document.getElementById('feed-online-count');
+  if (countEl) countEl.textContent = _onlineCount + ' online agora';
+}
+
+function showWinPopup(name, amount, market, option) {
+  _winPopupQueue.push({ name, amount, market, option });
+  if (!_winPopupShowing) processWinPopupQueue();
+}
+
+function processWinPopupQueue() {
+  if (_winPopupQueue.length === 0) { _winPopupShowing = false; return; }
+  _winPopupShowing = true;
+  const { name, amount, market, option } = _winPopupQueue.shift();
+
+  const popup = document.createElement('div');
+  popup.className = 'win-popup';
+  popup.innerHTML = `
+    <div class="win-popup-name">🏆 ${name} ganhou!</div>
+    <div class="win-popup-amount">+R$ ${amount.toFixed(2)}</div>
+    <div class="win-popup-detail">${option} · ${market}</div>
+  `;
+  document.body.appendChild(popup);
+  setTimeout(() => {
+    popup.remove();
+    setTimeout(processWinPopupQueue, 300);
+  }, 5000);
+}
+
+function simulateFakeActivity() {
+  // Fluctuate online count
+  _onlineCount = 800 + Math.floor(Math.random() * 600);
+  setInterval(() => {
+    const big = Math.random() < 0.15;
+    _onlineCount += Math.floor((Math.random() - 0.45) * (big ? 40 : 6));
+    _onlineCount = Math.max(500, Math.min(2000, _onlineCount));
+    renderFeed();
+    updateStats();
+  }, 4000 + Math.random() * 3000);
+
+  // New users joining
+  setInterval(() => {
+    if (Math.random() < 0.4) {
+      addFeedItem({ type: 'join', name: randomName(), emoji: randomEmoji() });
+    }
+  }, 6000);
+
+  // Fake bets every 2-5s
+  setInterval(() => {
+    const allOpen = MARKETS_DEF.filter(d => markets[d.id] && markets[d.id].status === 'open');
+    if (allOpen.length === 0) return;
+    const def = allOpen[Math.floor(Math.random() * allOpen.length)];
+    const m = markets[def.id];
+    const opt = def.options[Math.floor(Math.random() * def.options.length)];
+    const amt = randomAmount();
+    m.pools[opt] = (m.pools[opt] || 0) + amt;
+    m.betters[opt] = (m.betters[opt] || 0) + 1;
+
+    const name = randomName();
+    addFeedItem({ type: 'bet', name, emoji: randomEmoji(), option: opt, market: def.title, amount: amt });
+
+    // Update market card if visible
+    if (def.catKey === activeCategory) {
+      updateMarketCard(def.id);
+      updateSubmitBtn(def.id);
+    }
+    updateStats();
+  }, 2000 + Math.random() * 3000);
+
+  // Wins: a cada 2-4s, 60% de chance de ser ganho (feed balanceado)
+  setInterval(() => {
+    const allDefs = MARKETS_DEF.filter(d => markets[d.id]);
+    if (allDefs.length === 0) return;
+    const def = allDefs[Math.floor(Math.random() * allDefs.length)];
+    const opt = def.options[Math.floor(Math.random() * def.options.length)];
+    const betAmt = randomAmount();
+    const payout = randomPayout(betAmt);
+    const name = randomName();
+    addFeedItem({ type: 'win', name, option: opt, market: def.title, payout });
+  }, 1800 + Math.random() * 1500);
+
+  // Seed inicial: mistura equilibrada de ganhos e participações
+  setTimeout(() => {
+    const seedItems = [
+      { type: 'win' }, { type: 'bet' }, { type: 'win' },
+      { type: 'win' }, { type: 'bet' }, { type: 'win' },
+      { type: 'join'}, { type: 'win' }, { type: 'bet' },
+    ];
+    seedItems.forEach((item, i) => {
+      setTimeout(() => {
+        const def = MARKETS_DEF[Math.floor(Math.random() * MARKETS_DEF.length)];
+        const opt = def.options[Math.floor(Math.random() * def.options.length)];
+        if (item.type === 'win') {
+          const betAmt2 = randomAmount();
+          const payout = randomPayout(betAmt2);
+          addFeedItem({ type: 'win', name: randomName(), option: opt, market: def.title, payout });
+        } else if (item.type === 'bet') {
+          addFeedItem({ type: 'bet', name: randomName(), emoji: randomEmoji(), option: opt, market: def.title, amount: randomAmount() });
+        } else {
+          addFeedItem({ type: 'join', name: randomName(), emoji: randomEmoji() });
+        }
+      }, i * 250);
+    });
+  }, 1000);
+}
+
+function renderCategoryTabs() {
+  const tabs = document.getElementById('category-tabs');
+  if (!tabs) return;
+  tabs.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) =>
+    `<button class="cat-tab ${key === activeCategory ? 'active' : ''}" onclick="selectCategory('${key}')">${cat.label}</button>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+loadState();
+loadAdminState();
+seedFakeBets();
+
+// Render tudo imediatamente — visível antes do login
+activeCategory = 'transito';
+_onlineCount = 800 + Math.floor(Math.random() * 600);
+renderCategoryTabs();
+renderMarkets();
+loadCategoryVideo('transito');
+startTimers();
+
+// Seed feed imediato
+const _sd = MARKETS_DEF.filter(d => markets[d.id]);
+if (_sd.length) {
+  ['win','bet','win','win','bet','win','join','win','win','bet'].forEach((type, i) => {
+    const def = _sd[Math.floor(Math.random() * _sd.length)];
+    const opt = def.options[Math.floor(Math.random() * def.options.length)];
+    const ts  = Date.now() - (10 - i) * 14000;
+    if (type === 'win')
+      _feedItems.push({ type:'win', name:randomName(), option:opt, market:def.title, payout:randomPayout(randomAmount()), ts });
+    else if (type === 'bet')
+      _feedItems.push({ type:'bet', name:randomName(), emoji:randomEmoji(), option:opt, market:def.title, amount:randomAmount(), ts });
+    else
+      _feedItems.push({ type:'join', name:randomName(), emoji:randomEmoji(), ts });
+  });
+}
+renderFeed();
+renderRanking();
+updateStats();
+simulateFakeActivity();
+oscillateRanking();
+
+// Check existing Supabase session on page load
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await handleAuthSession(session);
+  } else {
+    document.getElementById('admin-toggle').style.display = 'none';
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
+
+  // Listen for auth changes (login/logout)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session && !STATE.user) {
+      await handleAuthSession(session);
+    }
+    if (event === 'SIGNED_OUT') {
+      location.reload();
+    }
+  });
+})();
+</script>
+</body>
+</html>
